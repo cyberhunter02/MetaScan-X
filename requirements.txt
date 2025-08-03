@@ -1,0 +1,13 @@
+# Web Framework
+Flask
+Werkzeug
+
+# Image Processing
+Pillow
+
+# PDF Generation
+weasyprint
+
+# Optional (for better CLI output, safe to include)
+tabulate
+colorama
