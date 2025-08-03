@@ -45,7 +45,7 @@ To get started with MetaScan-X, follow these simple commands.
 
 1.  **Clone the repository**:
     ```bash
-    git clone [https://github.com/cyberhunter02/MetaScan-X.git](https://github.com/cyberhunter02/MetaScan-X.git)
+    git clone https://github.com/cyberhunter02/MetaScan-X.git
     cd MetaScan-X
     ```
 
