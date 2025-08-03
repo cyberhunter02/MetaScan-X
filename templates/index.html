@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaScanX</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #8ac6ff;
+            --bg-light: #f4f7f9;
+            --bg-dark: #1e2125;
+            --card-bg-light: rgba(255, 255, 255, 0.5);
+            --card-bg-dark: rgba(30, 30, 30, 0.7);
+            --text-light: #333;
+            --text-dark: #e4e6eb;
+            --gradient-light: linear-gradient(135deg, #e0eafc, #cfdef3);
+            --gradient-dark: linear-gradient(135deg, #2c3e50, #4ca1af);
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            background-image: var(--gradient-light);
+            transition: background-color 0.4s, color 0.4s, background-image 0.4s;
+            min-height: 100vh;
+        }
+        body.dark-mode {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+            background-image: var(--gradient-dark);
+        }
+        .main-card {
+            background-color: var(--card-bg-light);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 2rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        body.dark-mode .main-card {
+            background-color: var(--card-bg-dark);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header-bg {
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            color: white;
+            padding: 2.5rem;
+            border-radius: 2rem 2rem 0 0;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .header-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            transform: skewY(-5deg);
+            transform-origin: top left;
+        }
+        .upload-area {
+            border: 3px dashed var(--primary-color);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .upload-area:hover, .upload-area.dragover {
+            background-color: rgba(74, 144, 226, 0.1);
+            transform: translateY(-5px);
+            border-color: var(--secondary-color);
+        }
+        .data-card, .summary-card {
+            background-color: var(--card-bg-light);
+            backdrop-filter: blur(15px);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        body.dark-mode .data-card, body.dark-mode .summary-card {
+            background-color: var(--card-bg-dark);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #map { height: 350px; width: 100%; border-radius: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .spinner-border { width: 4rem; height: 4rem; }
+        .hash-value {
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            background-color: #e9ecef;
+            border-radius: .5rem;
+            padding: .3rem .7rem;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        body.dark-mode .hash-value {
+            background-color: #2c2f33;
+            color: #ccc;
+        }
+        .form-control {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: .75rem;
+            transition: all 0.3s ease;
+        }
+        body.dark-mode .form-control {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.3);
+            color: var(--text-dark);
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(74, 144, 226, 0.25);
+            background-color: rgba(255, 255, 255, 0.5);
+            border-color: var(--primary-color);
+        }
+        body.dark-mode .form-control:focus {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #218838);
+            border: none;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+            border-radius: 1rem;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+        }
+        .accordion-button {
+            border-radius: 1rem;
+            background-color: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+        }
+        .accordion-button:not(.collapsed) {
+            color: #fff;
+            background-color: var(--primary-color);
+            box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
+        }
+        body.dark-mode .accordion-button {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-dark);
+        }
+        body.dark-mode .accordion-button:not(.collapsed) {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .accordion-item {
+            border: none;
+            background-color: transparent;
+        }
+        .accordion-body {
+            background-color: var(--card-bg-light);
+            border-radius: 0 0 1rem 1rem;
+        }
+        body.dark-mode .accordion-body {
+            background-color: var(--card-bg-dark);
+        }
+        .list-unstyled li {
+            border-bottom: 1px dashed rgba(0,0,0,0.1);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        body.dark-mode .list-unstyled li {
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container my-5">
+    <div class="main-card">
+        <div class="card-header header-bg d-flex justify-content-between align-items-center">
+            <h1 class="mb-0"><i class="fas fa-fingerprint me-2"></i> MetaScanX</h1>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="darkModeSwitch">
+                <label class="form-check-label text-white" for="darkModeSwitch">Dark Mode</label>
+            </div>
+        </div>
+        <div class="card-body p-4 p-md-5">
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <label for="investigatorName" class="form-label">Investigator Name</label>
+                        <input type="text" class="form-control" id="investigatorName" name="investigatorName">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="caseId" class="form-label">Case ID</label>
+                        <input type="text" class="form-control" id="caseId" name="caseId">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="description" name="description">
+                    </div>
+                </div>
+                <label for="file-input" class="upload-area d-flex flex-column align-items-center justify-content-center">
+                    <i class="fas fa-cloud-upload-alt fa-4x mb-3 text-primary"></i>
+                    <h5 class="mb-1">Drag & Drop or Click to Upload</h5>
+                    <p class="text-muted mb-0" id="file-name-display">JPEG, PNG, TIFF files supported</p>
+                    <input type="file" class="d-none" id="file-input" name="file" accept="image/*" required>
+                </label>
+            </form>
+            
+            <div id="loading" class="text-center d-none my-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3 text-muted">Extracting metadata... Please wait.</p>
+            </div>
+            
+            <div id="error-message" class="alert alert-danger d-none mt-4"></div>
+
+            <div id="results" class="d-none mt-5">
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <h4 class="mb-3">Image & Report</h4>
+                        <div class="data-card p-3 d-flex flex-column h-100">
+                            <img id="image-preview" src="" class="img-fluid rounded-4 shadow-sm mb-4" alt="Image Preview">
+                            <div class="mt-auto d-grid">
+                                <a id="pdf-download-link" href="#" class="btn btn-success btn-lg"><i class="fas fa-file-pdf me-2"></i>Download PDF Report</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <h4 class="mb-3">File Summary</h4>
+                        <div class="summary-card p-4 mb-4 h-100">
+                            <ul class="list-unstyled">
+                                <li class="d-flex justify-content-between"><strong>File Name:</strong> <span id="summary-filename"></span></li>
+                                <li class="d-flex justify-content-between"><strong>File Size:</strong> <span id="summary-filesize"></span></li>
+                                <li class="d-flex justify-content-between"><strong>File Type:</strong> <span id="summary-filetype"></span></li>
+                                <li class="d-flex justify-content-between"><strong>MD5 Hash:</strong> <span id="summary-md5" class="hash-value"></span></li>
+                                <li class="d-flex justify-content-between"><strong>SHA256 Hash:</strong> <span id="summary-sha256" class="hash-value"></span></li>
+                            </ul>
+                            <div class="mt-4">
+                                <h5 class="text-primary"><i class="fas fa-map-marker-alt me-2"></i>Location Data</h5>
+                                <p class="mb-2"><strong>GPS Coordinates:</strong> <span id="gps-coords"></span></p>
+                                <div id="map-container" class="mt-3" style="display:none;"><div id="map"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-5">
+                <h4 class="mb-3">Detailed Metadata</h4>
+                <div class="accordion" id="metadata-accordion"></div>
+            </div>
+            
+        </div>
+        <div style="text-align: center;">
+  <p style="font-size: 16px; margin-top: 5px;">
+    Powered by: <strong>Cyber Hunter Warrior</strong> 
+  </p>
+</div>
+   		 </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const uploadForm = document.getElementById('upload-form');
+    const loadingDiv = document.getElementById('loading');
+    const resultsDiv = document.getElementById('results');
+    const errorMsgDiv = document.getElementById('error-message');
+    const fileInput = document.getElementById('file-input');
+    const uploadArea = document.querySelector('.upload-area');
+    let map = null;
+
+    // Dark Mode
+    document.getElementById('darkModeSwitch').addEventListener('change', (e) => {
+        document.body.classList.toggle('dark-mode', e.target.checked);
+    });
+    
+    // Drag & Drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, e => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
+    });
+    uploadArea.addEventListener('dragover', () => uploadArea.classList.add('dragover'));
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', e => {
+        uploadArea.classList.remove('dragover');
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelect();
+    });
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileSelect);
+
+    function handleFileSelect() {
+        if (fileInput.files.length > 0) {
+            document.getElementById('file-name-display').textContent = fileInput.files[0].name;
+            uploadForm.dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+    }
+
+    uploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        loadingDiv.classList.remove('d-none');
+        resultsDiv.classList.add('d-none');
+        errorMsgDiv.classList.add('d-none');
+        
+        const formData = new FormData(this);
+        
+        // Add case info to formData
+        formData.append('investigatorName', document.getElementById('investigatorName').value);
+        formData.append('caseId', document.getElementById('caseId').value);
+        formData.append('description', document.getElementById('description').value);
+
+        try {
+            const response = await fetch('/upload', { method: 'POST', body: formData });
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'An unknown error occurred.');
+            }
+            displayResults(data);
+
+        } catch (error) {
+            errorMsgDiv.textContent = `Error: ${error.message}`;
+            errorMsgDiv.classList.remove('d-none');
+        } finally {
+            loadingDiv.classList.add('d-none');
+        }
+    });
+
+    function displayResults(data) {
+        document.getElementById('image-preview').src = `data:image/jpeg;base64,${data.thumbnail}`;
+        document.getElementById('pdf-download-link').href = `/download/${data.pdf_report}`;
+        
+        // Update summary card
+        const fileDetails = data.file_details;
+        document.getElementById('summary-filename').textContent = fileDetails['File Name'];
+        document.getElementById('summary-filesize').textContent = fileDetails['File Size'];
+        document.getElementById('summary-filetype').textContent = fileDetails['File Type'];
+        document.getElementById('summary-md5').textContent = fileDetails['MD5'];
+        document.getElementById('summary-sha256').textContent = fileDetails['SHA256'];
+        
+        const gpsCoords = fileDetails['GPS Coordinates'] || 'Not Available';
+        document.getElementById('gps-coords').textContent = gpsCoords;
+        
+        // Map
+        const mapContainer = document.getElementById('map-container');
+        if (map) { map.remove(); map = null; } // Remove previous map instance
+        
+        if (gpsCoords && gpsCoords !== "Not Available") {
+            mapContainer.style.display = 'block';
+            const [lat, lon] = gpsCoords.split(',').map(parseFloat);
+            map = L.map('map').setView([lat, lon], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.marker([lat, lon]).addTo(map).bindPopup('Photo Location').openPopup();
+        } else {
+            mapContainer.style.display = 'none';
+        }
+        
+        // Metadata Accordion
+        const accordion = document.getElementById('metadata-accordion');
+        accordion.innerHTML = '';
+        const groups = data.metadata_groups;
+        
+        // Reorder groups to show 'File' and 'EXIF' first
+        const orderedGroups = ['File', 'EXIF', 'IPTC', 'XMP', 'GPS', 'Other'];
+        const allGroupKeys = Object.keys(groups);
+        const finalOrder = [...new Set([...orderedGroups, ...allGroupKeys])];
+
+        finalOrder.forEach((groupName, index) => {
+            const items = groups[groupName];
+            if (!items || groupName === 'GPS' || groupName === 'Hash') return;
+
+            const itemHTML = Object.entries(items).map(([key, value]) => `
+                <tr>
+                    <td class="w-25"><strong>${key.replace(/_/g, ' ')}</strong></td>
+                    <td>${Array.isArray(value) ? value.join(', ') : value}</td>
+                </tr>`).join('');
+            
+            accordion.innerHTML += `
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-${index}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${index}">
+                            ${groupName.toUpperCase()} Information
+                        </button>
+                    </h2>
+                    <div id="collapse-${index}" class="accordion-collapse collapse" data-bs-parent="#metadata-accordion">
+                        <div class="accordion-body">
+                            <table class="table table-striped table-sm metadata-table">${itemHTML}</table>
+                        </div>
+                    </div>
+                </div>`;
+        });
+        resultsDiv.classList.remove('d-none');
+    }
+</script>
+</body>
+</html>

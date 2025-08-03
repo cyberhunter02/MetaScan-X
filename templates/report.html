@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Forensic Metadata Report by MetaScan X - {{ case_id }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: #333;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+        }
+        
+        .report-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 5px;
+        }
+        
+        .header {
+            text-align: center;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #2c3e50;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin: 0 0 5px 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .header-meta {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .case-info {
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .case-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .case-info th {
+            background-color: #2c3e50;
+            color: white;
+            text-align: left;
+            padding: 8px 12px;
+            font-weight: 500;
+            width: 25%;
+        }
+        
+        .case-info td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .section {
+            margin-top: 20px;
+        }
+        
+        .section-title {
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .section-content {
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            padding: 15px;
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .file-summary {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .thumbnail-box {
+            flex: 0 0 160px;
+        }
+        
+        .thumbnail-box img {
+            width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .summary-table th, 
+        .summary-table td {
+            padding: 8px 10px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+        }
+        
+        .summary-table th {
+            background-color: #f5f5f5;
+            font-weight: 500;
+            width: 30%;
+        }
+        
+        .highlight {
+            background-color: #fff8e1;
+        }
+        
+        .gps-coords {
+            font-family: monospace;
+            color: #d32f2f;
+            font-weight: 500;
+        }
+        
+        .hash-value {
+            font-family: monospace;
+            color: #2c3e50;
+            word-break: break-all;
+            font-size: 11px;
+        }
+        
+        .metadata-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .metadata-table th, 
+        .metadata-table td {
+            padding: 8px 10px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+        }
+        
+        .metadata-table th {
+            background-color: #f5f5f5;
+            font-weight: 500;
+            width: 30%;
+        }
+        
+        .legal-note {
+            margin-top: 25px;
+            padding: 12px 15px;
+            background-color: #f5f5f5;
+            border-left: 4px solid #d32f2f;
+            border-radius: 4px;
+        }
+        
+        .signature-area {
+            margin-top: 25px;
+            text-align: right;
+        }
+        
+        .signature-line {
+            border-bottom: 1px solid #333;
+            width: 250px;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+        
+        @media print {
+            body {
+                background: none;
+                padding: 0;
+            }
+            .report-container {
+                box-shadow: none;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="header">
+            <h1>MetaScan X-DIGITAL FORENSIC METADATA REPORT</h1>
+            <h4>Powered By: Cyber Hunter Warrior</h4>
+            <div class="header-meta">
+                <span><strong>Case ID:</strong> {{ case_id }}</span>
+                <span><strong>Date:</strong> {{ report_date }}</span>
+            </div>
+        </div>
+
+        <div class="case-info">
+            <table>
+                <tr>
+                    <th>Investigator</th>
+                    <td>{{ investigator_name }}</td>
+                </tr>
+                <tr>
+                    <th>Case ID</th>
+                    <td>{{ case_id }}</td>
+                </tr>
+                <tr>
+                    <th>Case Description</th>
+                    <td>{{ description }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">1. EXECUTIVE SUMMARY</div>
+            <div class="section-content">
+                <div class="file-summary">
+                    {% if thumbnail_data %}
+                    <div class="thumbnail-box">
+                        <img src="data:image/jpeg;base64,{{ thumbnail_data }}" alt="File preview">
+                    </div>
+                    {% endif %}
+                    <div style="flex:1">
+                        <table class="summary-table">
+                            <tr>
+                                <th>File Name</th>
+                                <td>{{ filename }}</td>
+                            </tr>
+                            {% if 'File' in metadata_groups and 'FileSize' in metadata_groups['File'] %}
+                            <tr>
+                                <th>File Size</th>
+                                <td>{{ metadata_groups['File']['FileSize'] }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if 'File' in metadata_groups and 'FileType' in metadata_groups['File'] %}
+                            <tr>
+                                <th>File Type</th>
+                                <td>{{ metadata_groups['File']['FileType'] }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if 'Hash' in metadata_groups %}
+                            <tr>
+                                <th>MD5 Hash</th>
+                                <td class="hash-value">{{ metadata_groups['Hash'].get('MD5', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>SHA-256 Hash</th>
+                                <td class="hash-value">{{ metadata_groups['Hash'].get('SHA256', 'N/A') }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if 'GPS' in metadata_groups and 'Coordinates' in metadata_groups['GPS'] %}
+                            <tr class="highlight">
+                                <th>GPS Coordinates</th>
+                                <td class="gps-coords">{{ metadata_groups['GPS']['Coordinates'] }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% for group_name, items in metadata_groups.items() %}
+            {% if items and group_name not in ['GPS', 'Hash'] %}
+            <div class="section">
+                <div class="section-title">{{ loop.index + 1 }}. {{ group_name | upper }} METADATA</div>
+                <div class="section-content">
+                    <table class="metadata-table">
+                        {% for key, value in items.items() %}
+                            <tr>
+                                <th>{{ key.replace('_', ' ') | title }}</th>
+                                <td>
+                                    {% if value is iterable and value is not string %}
+                                        {{ value | join(', ') }}
+                                    {% else %}
+                                        {{ value or 'N/A' }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="legal-note">
+            <h3>LEGAL NOTICE</h3>
+            <p>This report was generated using MetaScan X, a forensic metadata tool developed by Cyber Hunter Warrior.
+All metadata and hash values were extracted using standard forensic procedures.
+Users are advised to verify the contents before legal use.
+
+Cyber Hunter Warrior is not responsible for any misuse, alteration, or misinterpretation of this report.</p>
+        </div>
+
+        <div class="signature-area">
+            <div class="signature-line"></div>
+            <div style="margin-right: 50px; font-size: 11px;">
+                {{ investigator_name }}<br>
+                {{ report_date }}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
